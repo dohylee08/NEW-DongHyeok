@@ -10,47 +10,49 @@ st.title("❤️ 이름 궁합 테스트 (획수 피라미드)")
 st.write(f"한쪽 이름은 **{FIXED_NAME}**로 고정되어 있습니다.")
 st.write("상대방 이름을 입력한 후 '궁합 계산하기' 버튼을 눌러 결과를 확인하세요.")
 
-# 초성, 중성, 종성 리스트 및 획수 데이터
+# 초성, 중성, 종성 획수 데이터
 CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ']
-CHO_STROKES =    [2,4,2,3,6,5,4,4,8,2,4,1,3,6,4,3,4,5,3]
+CHO_STROKES   = [2,4,2,3,6,5,4,4,8,2,4,1,3,6,4,3,4,5,3]
 
 JUNGSUNG_LIST = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ']
-JUN_STROKES =    [2,3,3,4,2,3,3,4,2,3,4,3,3,2,3,4,3,3,1,2,1]
+JUN_STROKES   = [2,3,3,4,2,3,3,4,2,3,4,3,3,2,3,4,3,3,1,2,1]
 
-# 종성은 단일 자모와 복합 자모 분리
-JONGSUNG_LIST = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ']
 # 복합 종성 분해 맵
 COMPOSITE_JONG = {
-    'ㄳ': ('ㄱ', 'ㅅ'), 'ㄵ': ('ㄴ', 'ㅈ'), 'ㄶ': ('ㄴ', 'ㅎ'),
-    'ㄺ': ('ㄹ', 'ㄱ'), 'ㄻ': ('ㄹ', 'ㅁ'), 'ㄼ': ('ㄹ', 'ㅂ'), 'ㄽ': ('ㄹ', 'ㅅ'),
-    'ㄾ': ('ㄹ', 'ㅌ'), 'ㄿ': ('ㄹ', 'ㅍ'), 'ㅀ': ('ㄹ', 'ㅎ'), 'ㅄ': ('ㅂ', 'ㅅ')
+    'ㄳ': ('ㄱ','ㅅ'), 'ㄵ': ('ㄴ','ㅈ'), 'ㄶ': ('ㄴ','ㅎ'),
+    'ㄺ': ('ㄹ','ㄱ'), 'ㄻ': ('ㄹ','ㅁ'), 'ㄼ': ('ㄹ','ㅂ'), 'ㄽ': ('ㄹ','ㅅ'),
+    'ㄾ': ('ㄹ','ㅌ'), 'ㄿ': ('ㄹ','ㅍ'), 'ㅀ': ('ㄹ','ㅎ'), 'ㅄ': ('ㅂ','ㅅ')
 }
-# 종성 획수 사전 생성
-JONG_STROKES = { '': 0 }
-for jong in JONGSUNG_LIST[1:]:
-    if jong in CHOSUNG_LIST:
-        JONG_STROKES[jong] = CHO_STROKES[CHOSUNG_LIST.index(jong)]
-    elif jong in COMPOSITE_JONG:
-        c1, c2 = COMPOSITE_JONG[jong]
-        strokes = CHO_STROKES[CHOSUNG_LIST.index(c1)] + CHO_STROKES[CHOSUNG_LIST.index(c2)]
-        JONG_STROKES[jong] = strokes
-    else:
-        JONG_STROKES[jong] = 0
 
-# 한 글자 획수 계산
+# 한 글자 획수 계산 함수
 def count_strokes(ch: str) -> int:
     if not re.match(r"[가-힣]", ch):
         return 0
     code = ord(ch) - ord('가')
-    cho_idx = code // (21 * 28)
+    cho_idx  = code // (21 * 28)
     jung_idx = (code % (21 * 28)) // 28
     jong_idx = code % 28
 
-    return (
-        CHO_STROKES[cho_idx] +
-        JUN_STROKES[jung_idx] +
-        JONG_STROKES[JONGSUNG_LIST[jong_idx]]
-    )
+    # 기본 초, 중성 획수
+    strokes = CHO_STROKES[cho_idx] + JUN_STROKES[jung_idx]
+
+    # 종성 획수
+    jong_char = chr(ord('가') + (cho_idx * 21 + jung_idx) * 28 + jong_idx)
+    # 실제 종성 자모는 separate by decomposition
+    # get jong char via decomposition formula
+    # But easier: derive jong_char separately
+    # Instead, use original jong component list
+    jong_list = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ']
+    jong_comp = jong_list[jong_idx]
+    if jong_comp == '' or jong_comp is None:
+        return strokes
+    if jong_comp in CHOSUNG_LIST:
+        strokes += CHO_STROKES[CHOSUNG_LIST.index(jong_comp)]
+    elif jong_comp in COMPOSITE_JONG:
+        part1, part2 = COMPOSITE_JONG[jong_comp]
+        strokes += CHO_STROKES[CHOSUNG_LIST.index(part1)] + CHO_STROKES[CHOSUNG_LIST.index(part2)]
+    # else no addition
+    return strokes
 
 # 두 이름 번갈아 섞기
 def interleave(name1: str, name2: str) -> list:
@@ -69,7 +71,7 @@ def pyramid_sum(nums: list) -> list:
         for i in range(len(curr) - 1):
             s = curr[i] + curr[i+1]
             if s >= 10:
-                next_lvl.extend([s // 10, s % 10])
+                next_lvl.extend([s//10, s%10])
             else:
                 next_lvl.append(s)
         levels.append(next_lvl)
@@ -89,7 +91,7 @@ if st.button("궁합 계산하기"):
 
         st.subheader(f"🔮 {FIXED_NAME} ❤️ {other_name} 궁합 점수: {score}점")
         st.write("---")
-        st.write("#### 📊 피라미드 단계별 수치:")
+        st.write("#### 📊 피라미드 레벨별 수치:")
         for lvl in levels:
             st.write(lvl)
 
@@ -103,6 +105,7 @@ if st.button("궁합 계산하기"):
 
 st.markdown("---")
 st.caption("*참고: 오락용 결과입니다.*")
+
 
 
 
